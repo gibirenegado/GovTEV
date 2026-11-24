@@ -1,0 +1,553 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Reusable Hardened Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidDateStr(val) {
+      return val is string && (val == '' || (val.size() == 10 && val.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')));
+    }
+
+    function isValidReqDateStr(val) {
+      return val is string && val.size() == 10 && val.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'gibi.renegado@gmail.com';
+    }
+
+    function userDocExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isActiveMember() {
+      return isBootstrappedAdmin() || (isVerifiedUser() && userDocExists() && userDoc().status == 'active' && userDoc().role in ['admin', 'encoder', 'viewer']);
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (isVerifiedUser() && userDocExists() && userDoc().status == 'active' && userDoc().role == 'admin');
+    }
+
+    function isEncoderOrAdmin() {
+      return isAdmin() || (isVerifiedUser() && userDocExists() && userDoc().status == 'active' && userDoc().role == 'encoder');
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role', 'status', 'officeName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'status', 'officeName', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid) && data.uid == userId
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 150
+        && data.role in ['admin', 'encoder', 'viewer']
+        && data.status in ['active', 'inactive']
+        && data.officeName is string && data.officeName.size() <= 150
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOffice(data, officeId) {
+      return data.keys().hasAll(['id', 'workspaceScope', 'name', 'code', 'headName', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'workspaceScope', 'name', 'code', 'headName', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && isValidId(data.id) && data.id == officeId
+        && data.workspaceScope == 'gov-tev-office'
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
+        && data.code is string && data.code.size() >= 1 && data.code.size() <= 32
+        && data.headName is string && data.headName.size() <= 150
+        && data.status in ['active', 'inactive']
+        && isValidId(data.createdBy)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidEmployee(data, employeeId) {
+      return data.keys().hasAll(['id', 'workspaceScope', 'employeeCode', 'fullName', 'officeId', 'officeName', 'position', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'workspaceScope', 'employeeCode', 'fullName', 'officeId', 'officeName', 'position', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && isValidId(data.id) && data.id == employeeId
+        && data.workspaceScope == 'gov-tev-office'
+        && data.employeeCode is string && data.employeeCode.size() >= 1 && data.employeeCode.size() <= 50
+        && data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 150
+        && isValidId(data.officeId)
+        && data.officeName is string && data.officeName.size() >= 2 && data.officeName.size() <= 150
+        && data.position is string && data.position.size() >= 2 && data.position.size() <= 150
+        && data.status in ['active', 'inactive']
+        && isValidId(data.createdBy)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidDocumentaryRequirement(data, reqId) {
+      return data.keys().hasAll(['id', 'workspaceScope', 'code', 'name', 'description', 'isDefault', 'isCustom', 'sortOrder', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'workspaceScope', 'code', 'name', 'description', 'isDefault', 'isCustom', 'sortOrder', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && isValidId(data.id) && data.id == reqId
+        && data.workspaceScope == 'gov-tev-office'
+        && data.code is string && data.code.size() >= 1 && data.code.size() <= 32
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
+        && data.description is string && data.description.size() <= 400
+        && data.isDefault is bool
+        && data.isCustom is bool
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 1000
+        && data.status in ['active', 'inactive']
+        && isValidId(data.createdBy)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidRequirementTemplate(data, templateId) {
+      return data.keys().hasAll(['id', 'workspaceScope', 'name', 'description', 'requirementIds', 'requirementNames', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'workspaceScope', 'name', 'description', 'requirementIds', 'requirementNames', 'createdBy', 'createdAt', 'updatedAt'])
+        && isValidId(data.id) && data.id == templateId
+        && data.workspaceScope == 'gov-tev-office'
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 150
+        && data.description is string && data.description.size() <= 400
+        && data.requirementIds is list && data.requirementIds.size() <= 50
+        && (data.requirementIds.size() == 0 || data.requirementIds[0] is string)
+        && data.requirementNames is list && data.requirementNames.size() <= 50
+        && (data.requirementNames.size() == 0 || data.requirementNames[0] is string)
+        && isValidId(data.createdBy)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTravelRecord(data, tevId) {
+      return data.keys().hasAll([
+          'id', 'workspaceScope', 'tevRefNumber', 'employeeId', 'employeeCode', 'employeeName',
+          'officeId', 'officeName', 'position', 'destination', 'purpose',
+          'departureDate', 'returnDate', 'travelDays', 'travelOrderNumber', 'travelOrderDate',
+          'submissionDate', 'processingOfficer', 'completionDate', 'remarks',
+          'overallStatus', 'manualOnHold', 'compliancePercentage', 'applicableCount',
+          'completedCount', 'isSampleData', 'createdBy', 'createdByName', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'workspaceScope', 'tevRefNumber', 'employeeId', 'employeeCode', 'employeeName',
+          'officeId', 'officeName', 'position', 'destination', 'purpose',
+          'departureDate', 'returnDate', 'travelDays', 'travelOrderNumber', 'travelOrderDate',
+          'submissionDate', 'processingOfficer', 'completionDate', 'remarks',
+          'overallStatus', 'manualOnHold', 'compliancePercentage', 'applicableCount',
+          'completedCount', 'isSampleData', 'createdBy', 'createdByName', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == tevId
+        && data.workspaceScope == 'gov-tev-office'
+        && data.tevRefNumber is string && data.tevRefNumber.size() >= 3 && data.tevRefNumber.size() <= 64
+        && isValidId(data.employeeId)
+        && data.employeeCode is string && data.employeeCode.size() <= 50
+        && data.employeeName is string && data.employeeName.size() >= 2 && data.employeeName.size() <= 150
+        && isValidId(data.officeId)
+        && data.officeName is string && data.officeName.size() >= 2 && data.officeName.size() <= 150
+        && data.position is string && data.position.size() <= 150
+        && data.destination is string && data.destination.size() >= 2 && data.destination.size() <= 200
+        && data.purpose is string && data.purpose.size() >= 2 && data.purpose.size() <= 500
+        && isValidReqDateStr(data.departureDate)
+        && isValidReqDateStr(data.returnDate)
+        && data.travelDays is number && data.travelDays >= 1 && data.travelDays <= 1095
+        && data.travelOrderNumber is string && data.travelOrderNumber.size() <= 80
+        && isValidDateStr(data.travelOrderDate)
+        && isValidDateStr(data.submissionDate)
+        && data.processingOfficer is string && data.processingOfficer.size() <= 150
+        && isValidDateStr(data.completionDate)
+        && data.remarks is string && data.remarks.size() <= 1000
+        && data.overallStatus in ['Not Started', 'In Progress', 'For Submission', 'For Signature', 'For Approval', 'Completed', 'On Hold']
+        && data.manualOnHold is bool
+        && data.compliancePercentage is number && data.compliancePercentage >= 0 && data.compliancePercentage <= 100
+        && data.applicableCount is number && data.applicableCount >= 0 && data.applicableCount <= 100
+        && data.completedCount is number && data.completedCount >= 0 && data.completedCount <= 100
+        && data.isSampleData is bool
+        && isValidId(data.createdBy)
+        && data.createdByName is string && data.createdByName.size() <= 150
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidChecklistItem(data, checklistId) {
+      return data.keys().hasAll([
+          'id', 'workspaceScope', 'tevId', 'tevRefNumber', 'requirementId', 'requirementName',
+          'isCustom', 'sortOrder', 'applicable', 'prepared', 'submitted', 'signed', 'approved',
+          'returnedForCorrection', 'datePrepared', 'dateSubmitted', 'dateSigned', 'dateApproved',
+          'signatoryName', 'approvingOfficerName', 'remarks', 'updatedBy', 'updatedByName',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'workspaceScope', 'tevId', 'tevRefNumber', 'requirementId', 'requirementName',
+          'isCustom', 'sortOrder', 'applicable', 'prepared', 'submitted', 'signed', 'approved',
+          'returnedForCorrection', 'datePrepared', 'dateSubmitted', 'dateSigned', 'dateApproved',
+          'signatoryName', 'approvingOfficerName', 'remarks', 'updatedBy', 'updatedByName',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == checklistId
+        && data.workspaceScope == 'gov-tev-office'
+        && isValidId(data.tevId)
+        && data.tevRefNumber is string && data.tevRefNumber.size() >= 3 && data.tevRefNumber.size() <= 64
+        && isValidId(data.requirementId)
+        && data.requirementName is string && data.requirementName.size() >= 2 && data.requirementName.size() <= 150
+        && data.isCustom is bool
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 1000
+        && data.applicable is bool
+        && data.prepared is bool
+        && data.submitted is bool
+        && data.signed is bool
+        && data.approved is bool
+        && data.returnedForCorrection is bool
+        && isValidDateStr(data.datePrepared)
+        && isValidDateStr(data.dateSubmitted)
+        && isValidDateStr(data.dateSigned)
+        && isValidDateStr(data.dateApproved)
+        && data.signatoryName is string && data.signatoryName.size() <= 150
+        && data.approvingOfficerName is string && data.approvingOfficerName.size() <= 150
+        && data.remarks is string && data.remarks.size() <= 500
+        && isValidId(data.updatedBy)
+        && data.updatedByName is string && data.updatedByName.size() <= 150
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAttachment(data, attachmentId) {
+      return data.keys().hasAll([
+          'id', 'workspaceScope', 'tevId', 'tevRefNumber', 'checklistItemId', 'requirementName',
+          'fileName', 'fileType', 'fileExtension', 'fileSize', 'version', 'isLatest', 'dataUrl',
+          'uploadedBy', 'uploadedByName', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'workspaceScope', 'tevId', 'tevRefNumber', 'checklistItemId', 'requirementName',
+          'fileName', 'fileType', 'fileExtension', 'fileSize', 'version', 'isLatest', 'dataUrl',
+          'uploadedBy', 'uploadedByName', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == attachmentId
+        && data.workspaceScope == 'gov-tev-office'
+        && isValidId(data.tevId)
+        && data.tevRefNumber is string && data.tevRefNumber.size() >= 3 && data.tevRefNumber.size() <= 64
+        && isValidId(data.checklistItemId)
+        && data.requirementName is string && data.requirementName.size() >= 2 && data.requirementName.size() <= 150
+        && data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 200
+        && data.fileType is string && data.fileType.size() >= 1 && data.fileType.size() <= 120
+        && data.fileExtension in ['pdf', 'jpg', 'jpeg', 'png', 'docx', 'xlsx']
+        && data.fileSize is number && data.fileSize > 0 && data.fileSize <= 750000
+        && data.version is number && data.version >= 1 && data.version <= 100
+        && data.isLatest is bool
+        && data.dataUrl is string && data.dataUrl.size() >= 10 && data.dataUrl.size() <= 900000
+        && isValidId(data.uploadedBy)
+        && data.uploadedByName is string && data.uploadedByName.size() <= 150
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidImportHistory(data, importId) {
+      return data.keys().hasAll([
+          'id', 'workspaceScope', 'fileName', 'mode', 'totalRecords', 'successCount',
+          'failedCount', 'errorsSummary', 'importedBy', 'importedByName', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'workspaceScope', 'fileName', 'mode', 'totalRecords', 'successCount',
+          'failedCount', 'errorsSummary', 'importedBy', 'importedByName', 'createdAt'
+        ])
+        && isValidId(data.id) && data.id == importId
+        && data.workspaceScope == 'gov-tev-office'
+        && data.fileName is string && data.fileName.size() >= 1 && data.fileName.size() <= 200
+        && data.mode in ['import', 'update']
+        && data.totalRecords is number && data.totalRecords >= 0 && data.totalRecords <= 10000
+        && data.successCount is number && data.successCount >= 0 && data.successCount <= 10000
+        && data.failedCount is number && data.failedCount >= 0 && data.failedCount <= 10000
+        && data.errorsSummary is list && data.errorsSummary.size() <= 50
+        && (data.errorsSummary.size() == 0 || data.errorsSummary[0] is string)
+        && isValidId(data.importedBy)
+        && data.importedByName is string && data.importedByName.size() <= 150
+        && data.createdAt is timestamp;
+    }
+
+    function isValidActivityLog(data, logId) {
+      return data.keys().hasAll([
+          'id', 'workspaceScope', 'action', 'entityType', 'entityId', 'entityLabel',
+          'details', 'userId', 'userName', 'userRole', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'workspaceScope', 'action', 'entityType', 'entityId', 'entityLabel',
+          'details', 'userId', 'userName', 'userRole', 'createdAt'
+        ])
+        && isValidId(data.id) && data.id == logId
+        && data.workspaceScope == 'gov-tev-office'
+        && data.action is string && data.action.size() >= 2 && data.action.size() <= 100
+        && data.entityType is string && data.entityType.size() >= 2 && data.entityType.size() <= 60
+        && data.entityId is string && data.entityId.size() <= 128
+        && data.entityLabel is string && data.entityLabel.size() <= 200
+        && data.details is string && data.details.size() <= 600
+        && isValidId(data.userId)
+        && data.userName is string && data.userName.size() <= 150
+        && data.userRole in ['admin', 'encoder', 'viewer']
+        && data.createdAt is timestamp;
+    }
+
+    function isValidSystemSettings(data, settingId) {
+      return data.keys().hasAll([
+          'id', 'workspaceScope', 'agencyName', 'agencySubtitle', 'tevRefPrefix',
+          'tevRefSeparator', 'overdueThresholdDays', 'encoderCanImport',
+          'defaultRequirementIds', 'updatedBy', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'workspaceScope', 'agencyName', 'agencySubtitle', 'tevRefPrefix',
+          'tevRefSeparator', 'overdueThresholdDays', 'encoderCanImport',
+          'defaultRequirementIds', 'updatedBy', 'updatedAt'
+        ])
+        && isValidId(data.id) && data.id == settingId
+        && data.workspaceScope == 'gov-tev-office'
+        && data.agencyName is string && data.agencyName.size() >= 2 && data.agencyName.size() <= 150
+        && data.agencySubtitle is string && data.agencySubtitle.size() <= 200
+        && data.tevRefPrefix is string && data.tevRefPrefix.size() >= 2 && data.tevRefPrefix.size() <= 20
+        && data.tevRefSeparator is string && data.tevRefSeparator.size() >= 1 && data.tevRefSeparator.size() <= 5
+        && data.overdueThresholdDays is number && data.overdueThresholdDays >= 1 && data.overdueThresholdDays <= 365
+        && data.encoderCanImport is bool
+        && data.defaultRequirementIds is list && data.defaultRequirementIds.size() <= 50
+        && (data.defaultRequirementIds.size() == 0 || data.defaultRequirementIds[0] is string)
+        && isValidId(data.updatedBy)
+        && data.updatedAt is timestamp;
+    }
+
+    // 4. Collection Rules
+
+    // Users Collection (PII isolated: owner or admin only)
+    match /users/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isVerifiedUser() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isVerifiedUser() && isValidId(userId) && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (request.auth.uid == userId && (
+            (isBootstrappedAdmin() && incoming().role == 'admin' && incoming().status == 'active')
+            || (!isBootstrappedAdmin() && incoming().role == 'viewer' && incoming().status == 'active')
+          ))
+        );
+      allow update: if isVerifiedUser() && isValidId(userId) && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (request.auth.uid == userId
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'officeName', 'updatedAt'])
+            && incoming().role == existing().role
+            && incoming().status == existing().status
+            && incoming().email == existing().email)
+        );
+      allow delete: if isAdmin() && isValidId(userId) && userId != request.auth.uid;
+    }
+
+    // Offices / Divisions Collection
+    match /offices/{officeId} {
+      allow get: if isActiveMember() && isValidId(officeId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isAdmin() && isValidId(officeId) && isValidOffice(incoming(), officeId)
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(officeId) && isValidOffice(incoming(), officeId)
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'code', 'headName', 'status', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(officeId);
+    }
+
+    // Employees Collection
+    match /employees/{employeeId} {
+      allow get: if isActiveMember() && isValidId(employeeId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isAdmin() && isValidId(employeeId) && isValidEmployee(incoming(), employeeId)
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/offices/$(incoming().officeId));
+      allow update: if isAdmin() && isValidId(employeeId) && isValidEmployee(incoming(), employeeId)
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/offices/$(incoming().officeId))
+        && incoming().diff(existing()).affectedKeys().hasOnly(['employeeCode', 'fullName', 'officeId', 'officeName', 'position', 'status', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(employeeId);
+    }
+
+    // Documentary Requirements Masterlist
+    match /documentaryRequirements/{reqId} {
+      allow get: if isActiveMember() && isValidId(reqId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isAdmin() && isValidId(reqId) && isValidDocumentaryRequirement(incoming(), reqId)
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(reqId) && isValidDocumentaryRequirement(incoming(), reqId)
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['code', 'name', 'description', 'isDefault', 'sortOrder', 'status', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(reqId);
+    }
+
+    // Requirement Templates Collection
+    match /requirementTemplates/{templateId} {
+      allow get: if isActiveMember() && isValidId(templateId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isEncoderOrAdmin() && isValidId(templateId) && isValidRequirementTemplate(incoming(), templateId)
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isEncoderOrAdmin() && isValidId(templateId) && isValidRequirementTemplate(incoming(), templateId)
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (isAdmin() || existing().createdBy == request.auth.uid)
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'requirementIds', 'requirementNames', 'updatedAt']);
+      allow delete: if (isAdmin() || (isEncoderOrAdmin() && existing().createdBy == request.auth.uid)) && isValidId(templateId);
+    }
+
+    // Travel Records (TEVs) Collection
+    match /travelRecords/{tevId} {
+      allow get: if isActiveMember() && isValidId(tevId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isEncoderOrAdmin() && isValidId(tevId) && isValidTravelRecord(incoming(), tevId)
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/employees/$(incoming().employeeId))
+        && exists(/databases/$(database)/documents/offices/$(incoming().officeId));
+      allow update: if isEncoderOrAdmin() && isValidId(tevId) && isValidTravelRecord(incoming(), tevId)
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdByName == existing().createdByName
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (
+            existing().overallStatus != 'Completed'
+            && (
+              // Action 1: Update core travel details
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'employeeId', 'employeeCode', 'employeeName', 'officeId', 'officeName', 'position',
+                'destination', 'purpose', 'departureDate', 'returnDate', 'travelDays',
+                'travelOrderNumber', 'travelOrderDate', 'submissionDate', 'processingOfficer',
+                'completionDate', 'remarks', 'updatedAt'
+              ])
+              ||
+              // Action 2: Sync calculated status/compliance or On Hold toggle
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'overallStatus', 'manualOnHold', 'compliancePercentage', 'applicableCount',
+                'completedCount', 'completionDate', 'updatedAt'
+              ])
+            )
+          )
+        );
+      allow delete: if isAdmin() && isValidId(tevId);
+    }
+
+    // Independent Travel Requirement Checklists Collection
+    match /travelRequirementChecklists/{checklistId} {
+      allow get: if isActiveMember() && isValidId(checklistId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isEncoderOrAdmin() && isValidId(checklistId) && isValidChecklistItem(incoming(), checklistId)
+        && incoming().updatedBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/travelRecords/$(incoming().tevId));
+      allow update: if isEncoderOrAdmin() && isValidId(checklistId) && isValidChecklistItem(incoming(), checklistId)
+        && incoming().tevId == existing().tevId
+        && incoming().tevRefNumber == existing().tevRefNumber
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedBy == request.auth.uid
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (
+            get(/databases/$(database)/documents/travelRecords/$(existing().tevId)).data.overallStatus != 'Completed'
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'requirementName', 'sortOrder', 'applicable', 'prepared', 'submitted', 'signed', 'approved',
+              'returnedForCorrection', 'datePrepared', 'dateSubmitted', 'dateSigned', 'dateApproved',
+              'signatoryName', 'approvingOfficerName', 'remarks', 'updatedBy', 'updatedByName', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isEncoderOrAdmin() && isValidId(checklistId) && (isAdmin() || existing().isCustom == true);
+    }
+
+    // Attachments Collection
+    match /attachments/{attachmentId} {
+      allow get: if isActiveMember() && isValidId(attachmentId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isEncoderOrAdmin() && isValidId(attachmentId) && isValidAttachment(incoming(), attachmentId)
+        && incoming().uploadedBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/travelRecords/$(incoming().tevId));
+      allow update: if isEncoderOrAdmin() && isValidId(attachmentId) && isValidAttachment(incoming(), attachmentId)
+        && incoming().tevId == existing().tevId
+        && incoming().checklistItemId == existing().checklistItemId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['isLatest', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(attachmentId);
+    }
+
+    // Bulk Import History (Append-Only)
+    match /importHistory/{importId} {
+      allow get: if isActiveMember() && isValidId(importId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isEncoderOrAdmin() && isValidId(importId) && isValidImportHistory(incoming(), importId)
+        && incoming().importedBy == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    // Activity Logs (Immutable Audit Trail)
+    match /activityLogs/{logId} {
+      allow get: if isActiveMember() && isValidId(logId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isActiveMember() && isValidId(logId) && isValidActivityLog(incoming(), logId)
+        && incoming().userId == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    // System Settings Collection
+    match /systemSettings/{settingId} {
+      allow get: if isActiveMember() && isValidId(settingId);
+      allow list: if isVerifiedUser() && resource.data.workspaceScope == 'gov-tev-office';
+      allow create: if isAdmin() && isValidId(settingId) && isValidSystemSettings(incoming(), settingId)
+        && incoming().updatedBy == request.auth.uid
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(settingId) && isValidSystemSettings(incoming(), settingId)
+        && incoming().updatedBy == request.auth.uid
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'agencyName', 'agencySubtitle', 'tevRefPrefix', 'tevRefSeparator',
+          'overdueThresholdDays', 'encoderCanImport', 'defaultRequirementIds',
+          'updatedBy', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+  }
+}

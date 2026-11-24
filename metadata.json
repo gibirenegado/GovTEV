@@ -1,0 +1,8 @@
+{
+  "name": "GovTEV — Travel Expense Voucher Tracker & Monitoring System",
+  "description": "Centralized government office Travel Expense Voucher (TEV) recording, documentary checklist monitoring, signature/approval tracking, bulk Excel import, and reporting system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

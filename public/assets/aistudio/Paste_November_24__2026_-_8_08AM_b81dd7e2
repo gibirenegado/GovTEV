@@ -1,0 +1,1037 @@
+# PROJECT: WEB-BASED TRAVEL EXPENSE VOUCHER (TEV) TRACKER, RECORDING, AND MONITORING SYSTEM
+
+## 1. YOUR ROLE
+
+Act as an expert Senior Full-Stack Web Application Developer, Software Architect, Database Administrator, UI/UX Designer, and Business Process Automation Specialist.
+
+Your task is to design and develop a complete, professional, modern, responsive, and fully functional web-based **Travel Expense Voucher (TEV) Tracker, Recording, and Monitoring System** for government office operations.
+
+The application will serve as a centralized system for recording employee official travels, monitoring documentary requirements, tracking document preparation and submission, monitoring signatures and approvals, and generating reports.
+
+The system must be designed for actual office use, not merely as a static prototype or visual demonstration.
+
+Develop a working application with functional data entry, database storage, interactive checklists, Excel import and export, searching, filtering, dashboard analytics, report generation, and user management.
+
+Prioritize ease of use, data accuracy, efficient monitoring, and professional presentation.
+
+---
+
+# 2. MAIN OBJECTIVES
+
+The application must:
+
+1. Record and maintain a centralized database of employee official travels and corresponding TEVs.
+2. Monitor all documentary requirements associated with each travel transaction.
+3. Allow users to customize which documentary requirements are applicable to each travel.
+4. Track the preparation, submission, signing, and approval status of individual documents.
+5. Provide an overall monitoring dashboard showing the status of all TEVs.
+6. Allow bulk encoding and importing of multiple travel records through Excel files.
+7. Identify incomplete requirements, pending signatures, pending approvals, and completed TEVs.
+8. Generate reports based on employees, offices, travel dates, documentary requirements, and TEV status.
+9. Allow users to upload and attach scanned documents and supporting files.
+10. Maintain historical travel records and activity logs.
+11. Provide Excel, CSV, PDF, and print-ready reporting capabilities.
+12. Provide secure access for administrators, encoders, and viewers.
+
+---
+
+# 3. SYSTEM MODULES
+
+## MODULE 1: TEV MONITORING DASHBOARD
+
+The Dashboard must serve as the main landing page of the application.
+
+It must provide a consolidated, real-time overview of all recorded TEVs and their documentary processing status.
+
+### A. Overall TEV Summary Cards
+
+Display the following summary cards:
+
+1. TOTAL TEVs – Total number of recorded travel transactions.
+2. COMPLETED TEVs – Number of TEVs with all applicable documentary requirements completed.
+3. ONGOING TEVs – Number of TEVs currently being processed.
+4. NOT STARTED – Number of TEVs with no applicable requirements prepared.
+5. PENDING DOCUMENTS – Number of TEVs with outstanding documentary requirements.
+6. FOR SIGNATURE – Number of TEVs with documents awaiting signatures.
+7. FOR APPROVAL – Number of TEVs with documents awaiting approval.
+8. ON HOLD – Number of TEVs manually placed on hold.
+9. OVERDUE / INCOMPLETE – Number of TEVs with outstanding requirements beyond the specified monitoring period.
+
+All summary cards must display actual database figures.
+
+Make each card clickable. Clicking a card must automatically redirect the user to the Travel Records page with the corresponding filter applied.
+
+### B. TEV Status Distribution
+
+Create a visual doughnut or pie chart showing the distribution of TEVs according to their overall status:
+
+- Not Started
+- In Progress
+- For Submission
+- For Signature
+- For Approval
+- Completed
+- On Hold
+
+Display both the number and percentage of records for each category.
+
+### C. Documentary Requirements Monitoring
+
+Create a chart or table showing the overall status of individual documentary requirements across all recorded TEVs.
+
+Monitor:
+
+- Travel Orders
+- Itineraries of Travel
+- Certificates of Appearance
+- Certificates of Travel Completed
+- Back to Office Reports
+- Obligation Request and Status (ORS)
+- Disbursement Vouchers (DV)
+- Trip Tickets
+- Proposed Itineraries of Travel
+- Authority to Travel Certifications
+- Official Receipts
+- Other Supporting Documents
+
+For each document type, display:
+
+- Total Applicable
+- Prepared
+- Submitted
+- Signed
+- Approved
+- Pending
+
+Only count requirements marked as applicable in individual travel records.
+
+### D. TEV Monitoring by Office/Division
+
+Create a table showing TEV statistics grouped by office or division.
+
+Columns:
+
+- Office/Division
+- Total TEVs
+- Completed
+- In Progress
+- For Signature
+- For Approval
+- On Hold
+- Average Compliance Percentage
+
+Allow users to click an office name to view all its associated travel records.
+
+### E. TEV Monitoring by Employee
+
+Display:
+
+- Employee Name
+- Office/Division
+- Total Travel Records
+- Completed TEVs
+- Pending TEVs
+- Average Compliance Percentage
+- Latest Travel Date
+
+Allow users to click an employee to view their complete travel history.
+
+### F. TEV Monitoring by Month and Year
+
+Create charts displaying:
+
+- Number of TEVs recorded per month.
+- Number of completed TEVs per month.
+- Number of pending TEVs per month.
+- Number of TEVs by year.
+
+Include filters for:
+
+- Current Month
+- Previous Month
+- Current Quarter
+- Current Year
+- Previous Year
+- Custom Date Range
+
+### G. TEVs Requiring Immediate Attention
+
+Create a dedicated dashboard section called "TEVs Requiring Immediate Attention."
+
+Automatically identify:
+
+- TEVs with missing documentary requirements.
+- TEVs awaiting signatures.
+- TEVs awaiting approval.
+- TEVs with incomplete ORS or DV.
+- TEVs with overdue submissions.
+- TEVs placed on hold.
+
+Display:
+
+- TEV Reference Number
+- Employee Name
+- Office/Division
+- Destination
+- Travel Date
+- Outstanding Requirement
+- Current Status
+- Days Pending
+- Action
+
+Prioritize the longest-pending transactions.
+
+Include a View Details action for each record.
+
+### H. Dashboard Filters
+
+Provide dashboard-wide filters:
+
+- Office/Division
+- Employee Name
+- Date Range
+- Year
+- TEV Status
+- Documentary Requirement
+- Processing Status
+
+All dashboard summary cards, charts, and tables must automatically respond to selected filters.
+
+Include a Reset Filters button.
+
+### I. Dashboard Export
+
+Allow users to export dashboard results into:
+
+- Excel (.xlsx)
+- CSV
+- PDF
+- Printable Report
+
+Exported figures must reflect the currently selected filters.
+
+---
+
+## MODULE 2: TRAVEL RECORDING
+
+Create an Add New Travel Record function.
+
+### A. Employee Information
+
+Include the following fields:
+
+- Employee Name
+- Office/Division/Unit
+- Position/Designation
+- Employee ID
+
+Allow selection from a registered employee database.
+
+When an employee is selected, automatically populate their office and other available employee information.
+
+Allow authorized users to override the office assignment for an individual travel record when necessary, without changing historical records.
+
+### B. Travel Information
+
+Include:
+
+- Destination/Location of Travel
+- Purpose of Travel
+- Date of Departure
+- Date of Return
+- Number of Travel Days (automatically calculated)
+- Travel Order Number
+- Travel Order Date
+- TEV Reference Number (automatically generated)
+- Remarks
+
+Use date pickers for all date fields.
+
+Automatically calculate travel duration.
+
+### C. Administrative Information
+
+Include:
+
+- Date of Submission
+- Assigned Processing Officer
+- Overall TEV Status
+- Date of Completion
+- Remarks
+
+### D. Record Management
+
+Allow users to:
+
+- Add travel records.
+- Edit existing travel records.
+- View complete travel details.
+- Delete records with confirmation.
+- Search records.
+- Filter records.
+- Print individual TEV summaries.
+
+Generate a unique reference number for every travel record.
+
+Warn users when an employee has a potentially overlapping travel schedule or duplicate transaction.
+
+---
+
+## MODULE 3: DOCUMENTARY REQUIREMENTS CHECKLIST
+
+This is one of the most important modules.
+
+For every travel record, create an interactive and customizable documentary requirements checklist.
+
+### A. Default Documentary Requirements
+
+Include the following masterlist:
+
+1. Travel Order (TO)
+2. Itinerary of Travel (IOT)
+3. Certificate of Appearance (CA)
+4. Certificate of Travel Completed (CTC)
+5. Back to Office Report (BTOR)
+6. Obligation Request and Status (ORS)
+7. Disbursement Voucher (DV)
+8. Trip Ticket
+9. Proposed Itinerary of Travel
+10. Authority to Travel Certification
+11. Official Receipts / Supporting Receipts
+12. Other Supporting Documents
+
+### B. Customizable Requirements
+
+Users must be able to select which documentary requirements are applicable to each individual travel.
+
+Provide:
+
+- Applicable checkbox for every requirement.
+- Select All option.
+- Deselect All option.
+- Add Custom Requirement.
+- Edit Custom Requirement.
+- Delete Custom Requirement.
+- Save Requirement Template.
+- Apply Saved Template.
+
+Only applicable requirements must be included in compliance calculations.
+
+Users must be able to customize each transaction independently.
+
+### C. Document Processing Status
+
+Every applicable requirement must have four independent clickable status controls:
+
+1. PREPARED
+2. SUBMITTED
+3. SIGNED
+4. APPROVED
+
+Include the following tracking information:
+
+- Requirement Name
+- Applicable
+- Prepared
+- Submitted
+- Signed
+- Approved
+- Date Prepared
+- Date Submitted
+- Date Signed
+- Date Approved
+- Name of Signatory
+- Name of Approving Officer
+- Remarks
+
+Each status must be independently recorded.
+
+Do not automatically mark a document as signed or approved just because it has been prepared or submitted.
+
+Use the following visual indicators:
+
+- Gray – Not Yet Prepared
+- Blue – Prepared
+- Orange – Submitted / Pending
+- Purple – Signed
+- Green – Approved / Completed
+- Red – Overdue or Returned for Correction
+
+Allow users to update statuses by clicking checkboxes or status controls.
+
+### D. Document Attachment
+
+Allow users to upload scanned copies or digital versions of each documentary requirement.
+
+Support:
+
+- PDF
+- JPG
+- JPEG
+- PNG
+- DOCX
+- XLSX
+
+Each uploaded file must be associated with the appropriate TEV record and documentary requirement.
+
+Allow users to:
+
+- Upload documents.
+- View or preview documents.
+- Download documents.
+- Replace documents with updated versions.
+- Delete attachments according to their permissions.
+
+Maintain an attachment history where practical.
+
+---
+
+## MODULE 4: AUTOMATIC TEV STATUS AND COMPLIANCE MONITORING
+
+Automatically calculate the overall status of each TEV based on its applicable documentary requirements.
+
+Use the following classifications:
+
+- NOT STARTED – No applicable requirement has been prepared.
+- IN PROGRESS – At least one applicable requirement is being processed.
+- FOR SUBMISSION – Prepared documents are awaiting submission.
+- FOR SIGNATURE – Documents are awaiting signatures.
+- FOR APPROVAL – Documents are awaiting approval.
+- COMPLETED – All applicable requirements have been prepared, submitted, signed, and approved.
+- ON HOLD – Manually placed on hold by an authorized user.
+
+### A. Compliance Percentage
+
+Calculate:
+
+Compliance Percentage = (Number of Fully Approved Applicable Requirements / Total Applicable Requirements) × 100
+
+Display the percentage using a progress bar.
+
+Requirements marked Not Applicable must be excluded.
+
+If no requirements are selected, display "No Requirements Selected."
+
+### B. Important Status Rules
+
+1. Each TEV must have its own independent checklist.
+2. Only applicable requirements count toward compliance.
+3. Prepared, Submitted, Signed, and Approved are separate stages.
+4. All four stages must be completed before a requirement is considered fully completed.
+5. A TEV is completed only when all applicable requirements are fully completed.
+6. A manually assigned On Hold status must remain visible until an authorized user releases the hold.
+7. All changes must automatically update dashboard statistics.
+8. Do not allow contradictory status information.
+9. Record the user and timestamp for every status change.
+
+---
+
+## MODULE 5: TRAVEL RECORDS DATABASE
+
+Create a dedicated Travel Records page with a searchable and filterable table.
+
+Display:
+
+- TEV Reference Number
+- Employee Name
+- Office/Division
+- Destination
+- Date of Travel
+- Number of Travel Days
+- Applicable Requirements
+- Completed Requirements
+- Compliance Percentage
+- Overall Status
+- Actions
+
+### Available Actions
+
+- View Details
+- Edit Record
+- Update Checklist
+- Upload Documents
+- Print Summary
+- Delete Record
+
+### Advanced Filters
+
+Allow filtering by:
+
+- Employee
+- Office/Division
+- Destination
+- Date Range
+- Month
+- Year
+- Overall Status
+- Incomplete Requirements
+- Pending Signatures
+- Pending Approvals
+- Assigned Processing Officer
+
+Include pagination, sorting, and search.
+
+---
+
+## MODULE 6: BULK EXCEL IMPORT AND ENCODING
+
+Develop a fully functional Bulk Excel Import feature.
+
+Users must be able to encode multiple TEV records in an Excel template and upload them simultaneously.
+
+### A. Downloadable Excel Template
+
+Provide a downloadable Excel (.xlsx) template containing the following columns:
+
+**Employee and Office Information**
+
+1. Employee Name
+2. Office/Division/Unit
+3. Position/Designation
+4. Employee ID
+
+**Travel Information**
+
+5. Destination/Location
+6. Purpose of Travel
+7. Date of Departure
+8. Date of Return
+9. Travel Order Number
+10. Travel Order Date
+11. Remarks
+
+**Documentary Requirements**
+
+12. Travel Order
+13. Itinerary of Travel
+14. Certificate of Appearance
+15. Certificate of Travel Completed
+16. Back to Office Report
+17. ORS
+18. Disbursement Voucher
+19. Trip Ticket
+20. Proposed Itinerary of Travel
+21. Authority to Travel Certification
+22. Official Receipts
+23. Other Supporting Documents
+
+For documentary requirements, allow only:
+
+- YES – Applicable.
+- NO – Not Applicable.
+
+Include a separate Instructions worksheet explaining how to fill out the template, acceptable date formats, and allowed values.
+
+### B. Upload and Import Process
+
+Create an Upload Excel File button.
+
+Allow users to:
+
+1. Select an Excel or CSV file.
+2. Read and process the uploaded file.
+3. Preview all records.
+4. Validate mandatory fields.
+5. Identify missing information.
+6. Identify invalid date formats.
+7. Identify duplicate records.
+8. Identify unregistered employees or offices.
+9. Display validation errors by row.
+10. Correct errors before importing.
+11. Confirm the import before saving records.
+
+### C. Import Preview
+
+Display:
+
+- Excel Row Number
+- Employee Name
+- Office/Division
+- Destination
+- Travel Dates
+- Number of Applicable Requirements
+- Validation Status
+- Remarks/Errors
+
+Use:
+
+- Green – Valid
+- Yellow – Warning
+- Red – Invalid
+
+Allow users to import valid rows while skipping invalid rows, or return to the file for correction.
+
+### D. Automatic Import Processing
+
+After confirmation:
+
+- Create individual TEV records.
+- Generate unique reference numbers.
+- Associate the correct employee and office.
+- Automatically generate documentary checklists.
+- Mark YES requirements as Applicable.
+- Mark NO requirements as Not Applicable.
+- Initialize all processing statuses as Not Yet Prepared.
+- Calculate travel duration.
+- Save records to the database.
+- Update dashboard statistics.
+
+IMPORTANT: Importing records must never automatically mark documents as submitted, signed, or approved.
+
+### E. Import History
+
+Maintain an import history showing:
+
+- File Name
+- Date and Time Imported
+- Total Records
+- Successful Imports
+- Failed Imports
+- User Who Imported the File
+
+Allow administrators to view previous import summaries and download error reports.
+
+### F. Bulk Update Existing Records
+
+Allow users to update existing TEV records through Excel.
+
+Use TEV Reference Number as the unique identifier.
+
+Before applying updates:
+
+- Preview changes.
+- Display original and updated values.
+- Identify records affected.
+- Require confirmation.
+- Prevent accidental overwriting of signature and approval statuses.
+
+---
+
+## MODULE 7: EMPLOYEE AND OFFICE MANAGEMENT
+
+Create an Employee Database.
+
+Allow administrators to:
+
+- Add employees.
+- Edit employee information.
+- Deactivate employees.
+- Delete records when appropriate.
+- Assign employees to offices/divisions.
+- Search employees.
+- View employee travel history.
+
+Create an Office/Division Management page.
+
+Allow administrators to:
+
+- Add offices.
+- Edit office names.
+- Deactivate offices.
+- Assign employees to offices.
+- View TEV records by office.
+
+Maintain historical office information for previously recorded travel transactions.
+
+---
+
+## MODULE 8: REQUIREMENT TEMPLATES
+
+Allow users to save frequently used combinations of documentary requirements.
+
+Suggested templates:
+
+- Standard Official Travel
+- Local Travel
+- Foreign Travel
+- Travel with Cash Advance
+- Travel without Cash Advance
+- Customized Requirements
+
+Allow users to:
+
+- Create templates.
+- Name templates.
+- Select applicable requirements.
+- Edit templates.
+- Delete templates.
+- Apply templates to new TEV records.
+
+Applying a template must automatically select applicable requirements while allowing further customization.
+
+Changing a template must not automatically modify existing TEV records.
+
+---
+
+## MODULE 9: REPORTS AND EXPORTING
+
+Create a comprehensive Reports module.
+
+Generate:
+
+1. Masterlist of All TEVs
+2. TEVs by Employee
+3. TEVs by Office/Division
+4. TEVs by Month and Year
+5. Completed TEVs Report
+6. Pending TEVs Report
+7. Incomplete Documentary Requirements Report
+8. Pending Signature Report
+9. Pending Approval Report
+10. Overdue TEVs Report
+11. TEV Compliance Report
+12. Documentary Requirements Summary
+13. TEV Monitoring by Processing Officer
+
+### Individual TEV Printable Summary
+
+Generate a professional printable summary for every travel transaction containing:
+
+- TEV Reference Number
+- Employee Name
+- Office/Division
+- Position
+- Destination
+- Purpose of Travel
+- Travel Dates
+- Travel Order Number
+- Documentary Requirements Checklist
+- Applicable Requirements
+- Prepared Status
+- Submitted Status
+- Signed Status
+- Approved Status
+- Completion Dates
+- Signatory and Approving Officer
+- Remarks
+- Compliance Percentage
+- Overall TEV Status
+
+Provide export options:
+
+- Excel (.xlsx)
+- CSV
+- PDF
+- Print-ready format
+
+Allow users to select date ranges and filters before generating reports.
+
+---
+
+## MODULE 10: TRAVEL CALENDAR
+
+Create a calendar view of all employee travel schedules.
+
+Features:
+
+- Monthly calendar.
+- Weekly calendar.
+- Daily calendar.
+- Display employee names and travel destinations.
+- Filter by office/division.
+- Filter by employee.
+- View travel details by clicking a calendar entry.
+- Identify overlapping employee travel schedules.
+
+Use different visual indicators for completed, ongoing, upcoming, and on-hold travel records.
+
+---
+
+## MODULE 11: USER MANAGEMENT AND SECURITY
+
+Implement user authentication and role-based access.
+
+### Administrator
+
+- Full access.
+- Manage users.
+- Manage employees and offices.
+- Manage documentary requirements.
+- Manage templates.
+- Add, edit, and delete TEV records.
+- Import and export records.
+- Access all reports.
+
+### Encoder/Staff
+
+- Add TEV records.
+- Edit authorized records.
+- Update documentary checklists.
+- Upload supporting documents.
+- Import Excel records if authorized.
+- Generate permitted reports.
+
+### Viewer
+
+- View TEV records.
+- View documentary requirements and statuses.
+- View permitted dashboard reports.
+- Cannot modify or delete records.
+
+### Activity Logs
+
+Maintain an audit trail of:
+
+- Record creation.
+- Record modification.
+- Record deletion.
+- Excel imports.
+- Documentary requirement changes.
+- Signature status changes.
+- Approval status changes.
+- Document uploads and replacements.
+- User responsible.
+- Date and time of activity.
+
+---
+
+## MODULE 12: SYSTEM SETTINGS
+
+Provide a Settings page where administrators can configure:
+
+- Office and division masterlist.
+- Employee masterlist.
+- Documentary requirements masterlist.
+- Requirement templates.
+- TEV reference number format.
+- Monitoring and overdue thresholds.
+- User permissions.
+- System preferences.
+
+Allow administrators to define the default documentary requirements without changing the requirements of previously recorded TEVs.
+
+---
+
+# 4. USER INTERFACE AND DESIGN
+
+Create a modern, professional government-office-style application.
+
+### Design Theme
+
+Use:
+
+- Dark Navy Blue
+- White
+- Light Gray
+- Green for completed items
+- Orange for pending items
+- Red for overdue items
+- Purple for signed documents
+- Blue for prepared documents
+
+Use a clean, organized, and uncluttered layout.
+
+### Sidebar Navigation
+
+Provide the following navigation menu:
+
+1. Dashboard
+2. Travel Records
+3. Add New TEV
+4. Bulk Excel Import
+5. Documentary Requirements
+6. Employees
+7. Offices/Divisions
+8. Requirement Templates
+9. Travel Calendar
+10. Reports
+11. Activity Logs
+12. User Management
+13. Settings
+
+Use appropriate icons.
+
+### Dashboard Layout
+
+Place the following at the top:
+
+- Total TEVs
+- Completed TEVs
+- Ongoing TEVs
+- Pending Requirements
+- For Signature
+- For Approval
+- On Hold
+
+Below the summary cards, display:
+
+- TEV Status Distribution Chart
+- Documentary Requirements Monitoring Chart
+- TEV Records by Office
+- TEV Records by Month
+- TEVs Requiring Immediate Attention
+- Recent Travel Records
+
+Make the interface responsive on desktop, tablet, and mobile devices.
+
+---
+
+# 5. DATABASE AND TECHNICAL ARCHITECTURE
+
+Use a modern web application technology stack.
+
+Preferred technologies:
+
+- React
+- TypeScript
+- Tailwind CSS
+- Firebase Authentication
+- Cloud Firestore
+- Firebase Storage
+- Recharts or equivalent charting library
+- SheetJS or ExcelJS for Excel import/export
+- Suitable PDF generation library
+
+### Recommended Database Collections
+
+1. Users
+2. Employees
+3. Offices
+4. TravelRecords
+5. DocumentaryRequirements
+6. TravelRequirementChecklists
+7. RequirementTemplates
+8. TemplateRequirements
+9. Attachments
+10. ImportHistory
+11. ActivityLogs
+
+Establish appropriate database relationships and data validation.
+
+### Data Persistence
+
+Persistent storage is mandatory.
+
+Do not rely on temporary browser state or hardcoded sample data as the actual database.
+
+All records must remain available after:
+
+- Closing the application.
+- Reopening the application.
+- Refreshing the browser.
+- Logging in from another authorized device.
+
+Use Firebase security rules to protect data and restrict access according to user roles.
+
+Provide clear instructions for Firebase configuration and deployment.
+
+---
+
+# 6. CRITICAL SYSTEM-WIDE RULES
+
+Follow these requirements strictly:
+
+1. Each employee can have multiple TEV records.
+2. Each TEV must have an independent documentary checklist.
+3. Documentary requirements must be customizable per transaction.
+4. Only applicable requirements count toward compliance.
+5. Prepared, Submitted, Signed, and Approved are separate processing stages.
+6. Approval must not automatically mean a document was signed.
+7. All applicable documents must complete all four stages before the TEV is classified as Completed.
+8. Updating one record must not affect other records.
+9. Excel imports and manual encoding must use the same validation and database rules.
+10. All imported records must appear immediately on the dashboard.
+11. Dashboard statistics must reflect actual database records.
+12. Dashboard filters must consistently update all associated charts, cards, and tables.
+13. Deleting or modifying records must update dashboard statistics.
+14. Historical travel records must preserve the office information applicable at the time of recording.
+15. All important changes must be recorded in the Activity Logs.
+16. Prevent duplicate reference numbers.
+17. Do not automatically assume every documentary requirement is applicable to every travel.
+18. Do not hardcode dashboard statistics.
+19. Do not leave placeholder buttons or nonfunctional menu items.
+20. Ensure data integrity during bulk Excel imports and updates.
+
+---
+
+# 7. SAMPLE DATA FOR INITIAL TESTING
+
+Create clearly labeled sample records for demonstration and testing.
+
+Example:
+
+Employee: Juan Dela Cruz
+Office: Planning and Monitoring Unit
+Destination: Puerto Princesa City, Palawan
+Travel Dates: December 1–3, 2026
+
+Sample documentary requirements:
+
+- Travel Order – Approved
+- Itinerary of Travel – Signed and Approved
+- Certificate of Appearance – Submitted
+- Certificate of Travel Completed – Not Yet Prepared
+- Back to Office Report – Not Yet Prepared
+- ORS – Approved
+- Disbursement Voucher – Pending Signature
+- Trip Ticket – Not Applicable
+- Official Receipts – Submitted
+
+Ensure the dashboard correctly calculates and displays the status of this sample transaction.
+
+Clearly identify sample data as demonstration records.
+
+Allow administrators to delete sample records.
+
+---
+
+# 8. DEVELOPMENT AND TESTING REQUIREMENTS
+
+Develop the application in functional modules while maintaining a consistent overall design.
+
+Before completing the application, test the following workflow:
+
+1. Register an employee.
+2. Create a new TEV.
+3. Select the employee and office.
+4. Enter the destination and travel dates.
+5. Select applicable documentary requirements.
+6. Save the record.
+7. Verify that it appears on the dashboard.
+8. Update document preparation statuses.
+9. Update submission statuses.
+10. Update signature statuses.
+11. Update approval statuses.
+12. Verify compliance percentage calculations.
+13. Verify the overall TEV status.
+14. Import multiple TEV records through Excel.
+15. Verify Excel validation and error reporting.
+16. Verify that imported records appear on the dashboard.
+17. Update existing records using Excel.
+18. Generate reports.
+19. Export reports to Excel and PDF.
+20. Upload and view supporting documents.
+21. Test user permissions.
+22. Refresh and reopen the application to verify persistent storage.
+
+Fix all identified errors before considering the application complete.
+
+---
+
+# 9. FINAL DEVELOPMENT INSTRUCTIONS
+
+Build the complete application with all the modules and features described above.
+
+Prioritize these core functionalities:
+
+1. Comprehensive TEV Monitoring Dashboard.
+2. Individual Travel and TEV Recording.
+3. Customizable Documentary Requirements Checklist.
+4. Independent Prepared, Submitted, Signed, and Approved Tracking.
+5. Automatic TEV Status and Compliance Calculations.
+6. Bulk Excel Import and Encoding.
+7. Travel Records Database.
+8. Employee and Office Management.
+9. Document Upload and Attachment.
+10. Reports, Printing, and Excel/PDF Export.
+11. Persistent Database and User Authentication.
+
+Do not simply generate a frontend mockup. Implement the actual functions, database integration, validation, and data management.
+
+If a feature cannot be completed immediately, prioritize completing the core TEV recording, bulk Excel import, database persistence, documentary checklist, and monitoring dashboard before moving to secondary features.
+
+**FINAL EXPECTATION:**
+
+Deliver a fully functional, professional, responsive, database-driven web-based Travel Expense Voucher Tracker, Recording, and Monitoring System that can be used as an actual government office management tool.
+
+The application must make it easy to record individual and bulk travel transactions, monitor documentary requirements, track signatures and approvals, identify outstanding TEVs, and provide management with an accurate, real-time overview of all TEV transactions.
